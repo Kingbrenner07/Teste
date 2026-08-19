@@ -1,5 +1,7 @@
 import app from "./app";
+import { ensureDefaultServices } from "./lib/default-services";
 import { logger } from "./lib/logger";
+import { whatsappBot } from "./lib/whatsapp-bot";
 
 const rawPort = process.env["PORT"];
 
@@ -15,11 +17,26 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-app.listen(port, (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
-    process.exit(1);
-  }
+async function start(): Promise<void> {
+  await ensureDefaultServices();
 
-  logger.info({ port }, "Server listening");
+  app.listen(port, (err) => {
+    if (err) {
+      logger.error({ err }, "Error listening on port");
+      process.exit(1);
+    }
+
+    logger.info({ port }, "Server listening");
+
+    // Do not delay the health check while Chromium starts. LocalAuth reuses
+    // the persisted production session, reconnecting the bot after a restart.
+    void whatsappBot.initialize().catch((botError: unknown) => {
+      logger.error({ err: botError }, "Failed to start WhatsApp bot");
+    });
+  });
+}
+
+start().catch((err: unknown) => {
+  logger.fatal({ err }, "Failed to initialize the API");
+  process.exit(1);
 });
