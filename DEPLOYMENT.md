@@ -2,8 +2,9 @@
 
 O painel estático é publicado em
 [`https://kingbrenner07.github.io/Teste/`](https://kingbrenner07.github.io/Teste/).
-Os dados da agenda e o bot são atendidos pela API Node.js pública em
-`https://estetica-auto-api.onrender.com`.
+O build aponta para a API Node.js planejada em
+`https://estetica-auto-api.onrender.com`, que só atende agenda e WhatsApp
+depois que o Blueprint for provisionado no Render.
 
 ## API e PostgreSQL
 
@@ -21,8 +22,10 @@ caso contrário o bot desconecta e exige leitura do QR code novamente.
 ## GitHub Pages
 
 O frontend usa `VITE_API_URL=https://estetica-auto-api.onrender.com` durante o
-build. O valor é incorporado nos arquivos estáticos, portanto alterações na URL
-da API exigem um novo build e deploy do Pages.
+build. Confirme que `https://estetica-auto-api.onrender.com/api/healthz`
+responde `{"status":"ok"}` antes de publicar esta configuração. O valor é
+incorporado nos arquivos estáticos, portanto alterações na URL da API exigem um
+novo build e deploy do Pages.
 
 Para publicar a pasta `docs/` manualmente:
 
