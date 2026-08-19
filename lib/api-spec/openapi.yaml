@@ -1,0 +1,519 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification for estética automotiva dashboard
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: services
+    description: Car detailing services
+  - name: available-days
+    description: Available appointment days
+  - name: appointments
+    description: Appointment scheduling
+  - name: dashboard
+    description: Dashboard summary and stats
+  - name: bot
+    description: WhatsApp bot management
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /services:
+    get:
+      operationId: listServices
+      tags: [services]
+      summary: List all services
+      responses:
+        "200":
+          description: List of services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+
+  /available-days:
+    get:
+      operationId: getAvailableDays
+      tags: [available-days]
+      summary: Get available days for a month
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Available days
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AvailableDay"
+    put:
+      operationId: setAvailableDays
+      tags: [available-days]
+      summary: Set available days for a month
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AvailableDaysInput"
+      responses:
+        "200":
+          description: Updated available days
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AvailableDay"
+
+  /appointments:
+    get:
+      operationId: listAppointments
+      tags: [appointments]
+      summary: List appointments
+      parameters:
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: ["string", "null"]
+        - name: month
+          in: query
+          required: false
+          schema:
+            type: ["integer", "null"]
+        - name: year
+          in: query
+          required: false
+          schema:
+            type: ["integer", "null"]
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: List of appointments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Appointment"
+    post:
+      operationId: createAppointment
+      tags: [appointments]
+      summary: Create a new appointment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppointmentInput"
+      responses:
+        "201":
+          description: Created appointment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Appointment"
+        "400":
+          description: Validation error or no slots available
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /appointments/slots:
+    get:
+      operationId: getAvailableSlots
+      tags: [appointments]
+      summary: Get available time slots for a date and service
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: serviceId
+          in: query
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Available slots
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailableSlots"
+
+  /appointments/{id}:
+    patch:
+      operationId: updateAppointment
+      tags: [appointments]
+      summary: Update appointment status or details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppointmentUpdate"
+      responses:
+        "200":
+          description: Updated appointment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Appointment"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteAppointment
+      tags: [appointments]
+      summary: Cancel an appointment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Cancelled appointment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Appointment"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Dashboard summary stats
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /bot/status:
+    get:
+      operationId: getBotStatus
+      tags: [bot]
+      summary: Get WhatsApp bot connection status
+      responses:
+        "200":
+          description: Bot status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotStatus"
+
+  /bot/disconnect:
+    post:
+      operationId: disconnectBot
+      tags: [bot]
+      summary: Disconnect the WhatsApp bot
+      responses:
+        "200":
+          description: Disconnected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotStatus"
+
+  /bot/conversations:
+    get:
+      operationId: listConversations
+      tags: [bot]
+      summary: List recent WhatsApp conversations
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Conversation"
+
+  /bot/conversations/{phone}:
+    get:
+      operationId: getConversation
+      tags: [bot]
+      summary: Get conversation history with a customer
+      parameters:
+        - name: phone
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Conversation history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Message"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    Service:
+      type: object
+      required: [id, name, durationMinutes, maxPerDay, period, description]
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        durationMinutes:
+          type: number
+        maxPerDay:
+          type: number
+        period:
+          type: string
+          description: "full_day, morning_only, afternoon_only, both_periods"
+        description:
+          type: string
+        color:
+          type: string
+
+    AvailableDay:
+      type: object
+      required: [id, date, isAvailable]
+      properties:
+        id:
+          type: number
+        date:
+          type: string
+        isAvailable:
+          type: boolean
+
+    AvailableDaysInput:
+      type: object
+      required: [month, year, dates]
+      properties:
+        month:
+          type: number
+        year:
+          type: number
+        dates:
+          type: array
+          items:
+            type: string
+
+    Appointment:
+      type: object
+      required: [id, customerName, customerPhone, serviceId, serviceName, date, timeSlot, status, createdAt]
+      properties:
+        id:
+          type: number
+        customerName:
+          type: string
+        customerPhone:
+          type: string
+        serviceId:
+          type: number
+        serviceName:
+          type: string
+        date:
+          type: string
+        timeSlot:
+          type: string
+          description: "morning or afternoon"
+        status:
+          type: string
+          description: "scheduled, completed, cancelled"
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        vehicleModel:
+          type: ["string", "null"]
+        vehiclePlate:
+          type: ["string", "null"]
+
+    AppointmentInput:
+      type: object
+      required: [customerName, customerPhone, serviceId, date]
+      properties:
+        customerName:
+          type: string
+        customerPhone:
+          type: string
+        serviceId:
+          type: number
+        date:
+          type: string
+        notes:
+          type: string
+        vehicleModel:
+          type: string
+        vehiclePlate:
+          type: string
+
+    AppointmentUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+        notes:
+          type: string
+        vehicleModel:
+          type: string
+        vehiclePlate:
+          type: string
+
+    AvailableSlots:
+      type: object
+      required: [date, serviceId, slots, canSchedule]
+      properties:
+        date:
+          type: string
+        serviceId:
+          type: number
+        slots:
+          type: array
+          items:
+            type: string
+        canSchedule:
+          type: boolean
+        reason:
+          type: ["string", "null"]
+
+    DashboardSummary:
+      type: object
+      required: [todayAppointments, weekAppointments, monthAppointments, pendingCount, completedCount, cancelledCount, availableDaysThisMonth]
+      properties:
+        todayAppointments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Appointment"
+        weekAppointments:
+          type: number
+        monthAppointments:
+          type: number
+        pendingCount:
+          type: number
+        completedCount:
+          type: number
+        cancelledCount:
+          type: number
+        availableDaysThisMonth:
+          type: number
+        nextAvailableDate:
+          type: ["string", "null"]
+
+    BotStatus:
+      type: object
+      required: [status, connected]
+      properties:
+        status:
+          type: string
+          description: "disconnected, connecting, qr_ready, authenticated, ready"
+        connected:
+          type: boolean
+        qrCode:
+          type: ["string", "null"]
+        phoneNumber:
+          type: ["string", "null"]
+        lastActivity:
+          type: ["string", "null"]
+
+    Conversation:
+      type: object
+      required: [phone, name, lastMessage, lastMessageAt, unreadCount]
+      properties:
+        phone:
+          type: string
+        name:
+          type: string
+        lastMessage:
+          type: string
+        lastMessageAt:
+          type: string
+        unreadCount:
+          type: number
+        hasAppointment:
+          type: boolean
+
+    Message:
+      type: object
+      required: [id, phone, body, fromMe, timestamp]
+      properties:
+        id:
+          type: string
+        phone:
+          type: string
+        body:
+          type: string
+        fromMe:
+          type: boolean
+        timestamp:
+          type: string
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string

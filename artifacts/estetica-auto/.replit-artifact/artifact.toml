@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Estética Auto Dashboard"
+description = "Dashboard completo para lava-jato/estética automotiva. Gerencia agendamentos com regras automáticas de vagas por serviço, painel de dias disponíveis, e robô de atendimento WhatsApp via QR code (whatsapp-web.js) que responde clientes automaticamente."
+version = "1.0.0"
+id = "artifacts/estetica-auto"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22671
+
+[services.development]
+run = "pnpm --filter @workspace/estetica-auto run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/estetica-auto", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/estetica-auto/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22671"
+BASE_PATH = "/"
