@@ -1,38 +1,41 @@
-# Publicação no GitHub Pages
+# Publicação do painel e da API
 
-O painel pode ser publicado gratuitamente como uma interface estática no
-GitHub Pages. O build não exige Render, banco ou URL de API: sem
-`VITE_API_URL`, o navegador tenta usar as rotas `/api` no próprio domínio.
+O painel estático é publicado em
+[`https://kingbrenner07.github.io/Teste/`](https://kingbrenner07.github.io/Teste/).
+Os dados da agenda e o bot são atendidos pela API Node.js pública em
+`https://estetica-auto-api.onrender.com`.
 
-## Publicar somente a interface
+## API e PostgreSQL
 
-1. Gere o frontend com `BASE_PATH=/Teste/`, substituindo `Teste` pelo nome do
-   repositório:
+Crie um **Blueprint** no Render a partir deste repositório. O arquivo
+`render.yaml` provisiona:
 
-   ```sh
-   BASE_PATH=/Teste/ PORT=4173 NODE_ENV=production \
-     pnpm --filter @workspace/estetica-auto run build
-   ```
+* serviço Node.js em Docker, com health check em `/api/healthz`;
+* PostgreSQL gerenciado, ligado à variável `DATABASE_URL`;
+* disco persistente para a sessão autenticada do WhatsApp;
+* CORS liberado exclusivamente para `https://kingbrenner07.github.io`.
 
-2. Copie `artifacts/estetica-auto/dist/public` para a pasta `docs/`.
-3. Duplique `docs/index.html` como `docs/404.html` e crie `docs/.nojekyll`.
-4. Em **Settings → Pages**, selecione **Deploy from a branch**, branch `main`
-   e pasta `/docs`.
+O plano do serviço precisa manter um processo ativo e um disco persistente:
+caso contrário o bot desconecta e exige leitura do QR code novamente.
 
-O workflow `deploy-pages.yml` também pode ser usado quando estiver em
-`.github/workflows`; ele aceita `VITE_API_URL` como variável opcional.
+## GitHub Pages
 
-## Limitações do modo estático
+O frontend usa `VITE_API_URL=https://estetica-auto-api.onrender.com` durante o
+build. O valor é incorporado nos arquivos estáticos, portanto alterações na URL
+da API exigem um novo build e deploy do Pages.
 
-O GitHub Pages não executa Node.js nem PostgreSQL. Portanto, sem um backend
-publicado:
+Para publicar a pasta `docs/` manualmente:
 
-* a tela abre e a navegação funciona;
-* dashboard, agenda, agendamentos e status do WhatsApp não têm dados;
-* os botões que chamam `/api` falham até que uma API seja hospedada.
+```sh
+BASE_PATH=/Teste/ \
+VITE_API_URL=https://estetica-auto-api.onrender.com \
+PORT=4173 NODE_ENV=production \
+pnpm --filter @workspace/estetica-auto run build
+```
 
-## Backend opcional
+Depois copie `artifacts/estetica-auto/dist/public` para `docs/`, duplique
+`index.html` como `404.html` e mantenha `docs/.nojekyll`. Em **Settings →
+Pages**, selecione a branch `main` e a pasta `/docs`.
 
-Para habilitar os dados e o WhatsApp futuramente, o repositório ainda inclui
-`render.yaml`, `Dockerfile` e `docker-entrypoint.sh`. Depois de publicar uma
-API, configure `VITE_API_URL` com a URL pública dela e reconstrua o frontend.
+O workflow `deploy-pages.yml` executa o mesmo build quando o GitHub Pages for
+configurado para publicar via GitHub Actions.

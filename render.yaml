@@ -15,7 +15,7 @@ services:
           name: estetica-auto-db
           property: connectionString
       - key: ALLOWED_ORIGIN
-        sync: false
+        value: https://kingbrenner07.github.io
       - key: WHATSAPP_AUTH_DIR
         value: /var/data/whatsapp-auth
     disk:

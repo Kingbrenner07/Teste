@@ -5,11 +5,15 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
+const githubPagesOrigin = "https://kingbrenner07.github.io";
 const configuredOrigin = process.env["ALLOWED_ORIGIN"]?.trim();
 
-if (process.env["NODE_ENV"] === "production" && !configuredOrigin) {
+if (
+  process.env["NODE_ENV"] === "production" &&
+  configuredOrigin !== githubPagesOrigin
+) {
   throw new Error(
-    "ALLOWED_ORIGIN must be set in production to the GitHub Pages URL.",
+    `ALLOWED_ORIGIN must be ${githubPagesOrigin} in production.`,
   );
 }
 
