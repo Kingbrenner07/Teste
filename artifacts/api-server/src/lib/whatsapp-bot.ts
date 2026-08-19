@@ -148,7 +148,11 @@ class WhatsAppBot extends EventEmitter {
       }
 
       const client = new Client({
-        authStrategy: new LocalAuth({ dataPath: "/tmp/wwebjs_auth" }),
+        // Set WHATSAPP_AUTH_DIR to a persistent disk in production. Without it,
+        // a host restart would require scanning the QR code again.
+        authStrategy: new LocalAuth({
+          dataPath: process.env["WHATSAPP_AUTH_DIR"] ?? "/tmp/wwebjs_auth",
+        }),
         puppeteer: puppeteerConfig,
       });
 
