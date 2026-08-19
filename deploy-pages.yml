@@ -21,6 +21,10 @@ jobs:
       # The repository name is the default GitHub Pages base path:
       # https://<user>.github.io/<repository>/
       BASE_PATH: /${{ github.event.repository.name }}/
+      # Optionally set this repository variable to a public Node API URL.
+      # Without it, the static site still builds and uses same-origin /api
+      # requests, which are unavailable on GitHub Pages.
+      VITE_API_URL: ${{ vars.VITE_API_URL }}
       PORT: 4173
       NODE_ENV: production
 
