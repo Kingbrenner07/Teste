@@ -1,6 +1,12 @@
 import { format, parse, getDaysInMonth, startOfMonth, endOfMonth, addMonths, subMonths, isSameMonth, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useGetAvailableDays, useListAppointments, useUpdateAppointment, useDeleteAppointment } from "@workspace/api-client-react";
+import {
+  getListAppointmentsQueryKey,
+  useGetAvailableDays,
+  useListAppointments,
+  useUpdateAppointment,
+  useDeleteAppointment,
+} from "@workspace/api-client-react";
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,7 +36,14 @@ export default function Agenda() {
   const selectedDateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined;
   const { data: dayAppointments, isLoading: isLoadingAppointments, refetch: refetchAppointments } = useListAppointments(
     selectedDateStr ? { date: selectedDateStr } : undefined,
-    { query: { enabled: !!selectedDateStr } }
+    {
+      query: {
+        queryKey: getListAppointmentsQueryKey(
+          selectedDateStr ? { date: selectedDateStr } : undefined,
+        ),
+        enabled: !!selectedDateStr,
+      },
+    }
   );
 
   const updateMutation = useUpdateAppointment();
