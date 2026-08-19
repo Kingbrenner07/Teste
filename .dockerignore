@@ -1,0 +1,14 @@
+.git
+.github
+.agents
+.local
+.cache
+attached_assets
+downloads
+node_modules
+**/node_modules
+**/dist
+**/.tsbuildinfo
+**/.wwebjs_cache
+**/.wwebjs_auth
+*.log
