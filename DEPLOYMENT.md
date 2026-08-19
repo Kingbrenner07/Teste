@@ -1,46 +1,38 @@
-# Publicação fora do Replit
+# Publicação no GitHub Pages
 
-O painel é estático no GitHub Pages, mas a agenda e o WhatsApp precisam de um
-processo Node.js contínuo e de PostgreSQL. Este repositório inclui
-`render.yaml` e `Dockerfile` para publicar esses componentes no Render.
+O painel pode ser publicado gratuitamente como uma interface estática no
+GitHub Pages. O build não exige Render, banco ou URL de API: sem
+`VITE_API_URL`, o navegador tenta usar as rotas `/api` no próprio domínio.
 
-## 1. Criar o backend e banco
+## Publicar somente a interface
 
-1. No Render, crie um **Blueprint** a partir deste repositório.
-2. Confirme a criação do serviço `estetica-auto-api`, do PostgreSQL
-   `estetica-auto-db` e do disco persistente.
-3. No serviço, defina `ALLOWED_ORIGIN` como a origem exata do Pages:
-   `https://<usuario-ou-organizacao>.github.io`.
-   Não inclua o nome do repositório nesse valor.
-4. Faça o deploy e copie a URL pública do serviço, por exemplo
-   `https://estetica-auto-api.onrender.com`.
+1. Gere o frontend com `BASE_PATH=/Teste/`, substituindo `Teste` pelo nome do
+   repositório:
 
-O container aplica o schema e cadastra os dez serviços padrão antes de iniciar
-a API. O disco em
-`/var/data/whatsapp-auth` conserva a sessão do WhatsApp entre reinicializações,
-e o bot se reconecta automaticamente ao iniciar. Não remova esse disco enquanto
-quiser manter o login do bot.
+   ```sh
+   BASE_PATH=/Teste/ PORT=4173 NODE_ENV=production \
+     pnpm --filter @workspace/estetica-auto run build
+   ```
 
-## 2. Conectar o GitHub Pages
+2. Copie `artifacts/estetica-auto/dist/public` para a pasta `docs/`.
+3. Duplique `docs/index.html` como `docs/404.html` e crie `docs/.nojekyll`.
+4. Em **Settings → Pages**, selecione **Deploy from a branch**, branch `main`
+   e pasta `/docs`.
 
-Em **GitHub → Settings → Secrets and variables → Actions → Variables**, crie:
+O workflow `deploy-pages.yml` também pode ser usado quando estiver em
+`.github/workflows`; ele aceita `VITE_API_URL` como variável opcional.
 
-| Nome | Valor |
-| --- | --- |
-| `VITE_API_URL` | A URL pública do backend, sem barra final |
+## Limitações do modo estático
 
-Depois faça novo push na branch publicada ou execute o workflow **Deploy
-Estética Auto to GitHub Pages** manualmente. O workflow falha de propósito se
-essa variável estiver ausente, evitando publicar um painel que procure uma API
-local inexistente.
+O GitHub Pages não executa Node.js nem PostgreSQL. Portanto, sem um backend
+publicado:
 
-## 3. Verificação
+* a tela abre e a navegação funciona;
+* dashboard, agenda, agendamentos e status do WhatsApp não têm dados;
+* os botões que chamam `/api` falham até que uma API seja hospedada.
 
-* Abra `<URL_DO_BACKEND>/api/healthz`: deve responder com o health check.
-* Abra o GitHub Pages e crie/edite um agendamento.
-* Em **WhatsApp Bot**, gere o QR code e leia-o no celular. O status deve mudar
-  para **Conectado & Pronto**.
+## Backend opcional
 
-O backend aceita requisições de navegador somente da origem em
-`ALLOWED_ORIGIN`; verifique que ela corresponde exatamente ao domínio do
-GitHub Pages antes de publicar.
+Para habilitar os dados e o WhatsApp futuramente, o repositório ainda inclui
+`render.yaml`, `Dockerfile` e `docker-entrypoint.sh`. Depois de publicar uma
+API, configure `VITE_API_URL` com a URL pública dela e reconstrua o frontend.
