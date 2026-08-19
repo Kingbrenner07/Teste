@@ -26,7 +26,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useListServices, useGetAvailableSlots, useCreateAppointment, getListAppointmentsQueryKey } from "@workspace/api-client-react";
+import {
+  getGetAvailableSlotsQueryKey,
+  useListServices,
+  useGetAvailableSlots,
+  useCreateAppointment,
+  getListAppointmentsQueryKey,
+} from "@workspace/api-client-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { CalendarIcon, Loader2, Car, User, Clock, CalendarDays, AlignLeft } from "lucide-react";
@@ -73,7 +79,15 @@ export default function NovoAgendamento() {
 
   const { data: slotsData, isLoading: isLoadingSlots } = useGetAvailableSlots(
     { date: watchDate, serviceId: watchServiceId },
-    { query: { enabled: !!watchDate && !!watchServiceId } }
+    {
+      query: {
+        queryKey: getGetAvailableSlotsQueryKey({
+          date: watchDate,
+          serviceId: watchServiceId,
+        }),
+        enabled: !!watchDate && !!watchServiceId,
+      },
+    }
   );
 
   // Reset slot when date or service changes
@@ -102,7 +116,9 @@ export default function NovoAgendamento() {
           setLocation("/agenda");
         },
         onError: (err) => {
-          toast.error(err.error?.error || "Erro ao criar agendamento.");
+          toast.error(
+            err.data?.error || "Erro ao criar agendamento.",
+          );
         }
       }
     );
@@ -272,7 +288,14 @@ export default function NovoAgendamento() {
                   <Button 
                     type="submit" 
                     className="w-full md:w-auto shadow-[0_0_15px_hsl(var(--primary)_/_0.3)] transition-all"
-                    disabled={createMutation.isPending || (watchDate && watchServiceId && !slotsData?.canSchedule)}
+                    disabled={
+                      createMutation.isPending ||
+                      Boolean(
+                        watchDate &&
+                          watchServiceId &&
+                          !slotsData?.canSchedule,
+                      )
+                    }
                   >
                     {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Confirmar Agendamento
