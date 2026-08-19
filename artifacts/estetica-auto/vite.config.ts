@@ -27,6 +27,15 @@ if (!basePath) {
   );
 }
 
+if (
+  process.env.VITE_REQUIRE_EXTERNAL_API_URL === 'true' &&
+  !process.env.VITE_API_URL?.trim()
+) {
+  throw new Error(
+    'VITE_API_URL must be configured when building the GitHub Pages site.',
+  );
+}
+
 export default defineConfig({
   base: basePath,
   plugins: [
