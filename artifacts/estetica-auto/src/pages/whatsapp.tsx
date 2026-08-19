@@ -1,4 +1,10 @@
-import { useGetBotStatus, useDisconnectBot, useListConversations } from "@workspace/api-client-react";
+import {
+  getGetBotStatusQueryKey,
+  getListConversationsQueryKey,
+  useGetBotStatus,
+  useDisconnectBot,
+  useListConversations,
+} from "@workspace/api-client-react";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,8 +14,8 @@ import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { getGetBotStatusQueryKey } from "@workspace/api-client-react";
 import { cn } from "@/lib/utils";
+import { apiBaseUrl } from "@/lib/api-url";
 
 export default function WhatsAppBot() {
   const queryClient = useQueryClient();
@@ -20,22 +26,27 @@ export default function WhatsAppBot() {
     query: { 
       refetchInterval: (data) => {
         // Poll quickly if connecting or waiting for QR scan
-        if (data?.status === 'connecting' || data?.status === 'qr_ready') return 3000;
+        const status = data.state.data?.status;
+        if (status === 'connecting' || status === 'qr_ready') return 3000;
         // Poll normally otherwise
         return 30000;
-      }
+      },
+      queryKey: getGetBotStatusQueryKey(),
     } 
   });
 
   const disconnectMutation = useDisconnectBot();
   const { data: conversations, isLoading: isLoadingConversations } = useListConversations({
-    query: { enabled: statusData?.status === 'ready' }
+    query: {
+      queryKey: getListConversationsQueryKey(),
+      enabled: statusData?.status === 'ready',
+    },
   });
 
   const handleConnect = async () => {
     try {
       setIsConnecting(true);
-      const res = await fetch(`${import.meta.env.BASE_URL.replace(/\/$/, '')}/api/bot/connect`, { method: 'POST' });
+      const res = await fetch(`${apiBaseUrl ?? ""}/api/bot/connect`, { method: 'POST' });
       if (!res.ok) throw new Error('Falha ao conectar');
       queryClient.invalidateQueries({ queryKey: getGetBotStatusQueryKey() });
       toast.success("Iniciando conexão com WhatsApp...");
