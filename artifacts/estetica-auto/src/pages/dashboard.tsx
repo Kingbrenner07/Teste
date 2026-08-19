@@ -1,4 +1,8 @@
-import { useGetDashboardSummary, useListAppointments } from "@workspace/api-client-react";
+import {
+  getGetDashboardSummaryQueryKey,
+  useGetDashboardSummary,
+  useListAppointments,
+} from "@workspace/api-client-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarIcon, CheckCircle2, Clock, XCircle, ChevronRight, Car, User } from "lucide-react";
@@ -9,7 +13,10 @@ import { ptBR } from "date-fns/locale";
 
 export default function Dashboard() {
   const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary({
-    query: { refetchInterval: 30000 }
+    query: {
+      queryKey: getGetDashboardSummaryQueryKey(),
+      refetchInterval: 30000,
+    },
   });
   
   const today = format(new Date(), 'yyyy-MM-dd');
