@@ -1,11 +1,19 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Calendar, PlusCircle, CalendarDays, MessageSquare } from "lucide-react";
-import { useGetBotStatus } from "@workspace/api-client-react";
+import {
+  getGetBotStatusQueryKey,
+  useGetBotStatus,
+} from "@workspace/api-client-react";
 
 export function Sidebar() {
   const [location] = useLocation();
-  const { data: botStatus } = useGetBotStatus({ query: { refetchInterval: 30000 } });
+  const { data: botStatus } = useGetBotStatus({
+    query: {
+      queryKey: getGetBotStatusQueryKey(),
+      refetchInterval: 30000,
+    },
+  });
 
   const links = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
